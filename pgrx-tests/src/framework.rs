@@ -163,8 +163,15 @@ pub fn run_test(
 
         let system_loglines = format_loglines(&system_session_id, &loglines);
         let session_loglines = format_loglines(&session_id, &loglines);
+        let mut all_loglines = String::new();
+        for (_session_id, line_vec) in loglines.lock().unwrap().iter() {
+            for line in line_vec {
+                all_loglines.push_str(line);
+                all_loglines.push('\n');
+            }
+        }
         panic!(
-            "\n\nPostgres Messages:\n{system_loglines}\n\nTest Function Messages:\n{session_loglines}\n\nClient Error:\n{message}\npostgres location: {pg_location}\nrust location: {rust_location}\n\n",
+            "\n\nPostgres Messages:\n{system_loglines}\n\nTest Function Messages:\n{session_loglines}\n\nAll the Logs:\n{all_loglines}\n\nClient Error:\n{message}\npostgres location: {pg_location}\nrust location: {rust_location}\n\n",
                 system_loglines = system_loglines.dimmed().white(),
                 session_loglines = session_loglines.cyan(),
                 message = message.bold().red(),
