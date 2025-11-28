@@ -81,6 +81,7 @@
 #include "commands/prepare.h"
 #include "commands/proclang.h"
 #include "commands/progress.h"
+#include "commands/publicationcmds.h"
 #include "commands/seclabel.h"
 #include "commands/tablespace.h"
 #include "commands/tablecmds.h"
