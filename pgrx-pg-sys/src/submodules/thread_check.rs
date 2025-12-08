@@ -40,6 +40,19 @@ pub fn check_active_thread() {
     }
 }
 
+/// Returns true if calling into pgrx from the current thread would panic.
+///
+/// This is useful for scenarios where you need to check thread safety before
+/// making pgrx calls, particularly in multi-threaded contexts where calls are
+/// protected by locks but you want to verify safety beforehand.
+pub fn would_fail_thread_check() -> bool {
+    let current_thread = nonzero_thread_id();
+    match ACTIVE_THREAD.load(Ordering::Relaxed) {
+        0 => is_os_main_thread() == Some(false),
+        thread_id => current_thread.get() != thread_id,
+    }
+}
+
 /// Use OS-specific mechanisms to detect if we're the process main thread, if
 /// supported on the OS. Should return `None` when unsupported, or if there's an
 /// error.
