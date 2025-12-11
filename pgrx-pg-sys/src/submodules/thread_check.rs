@@ -22,11 +22,15 @@
 //! future...
 
 use std::num::NonZeroUsize;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 static ACTIVE_THREAD: AtomicUsize = AtomicUsize::new(0);
 #[track_caller]
 pub fn check_active_thread() {
+    if !THREAD_CHECKS_ENABLED.load(Ordering::Relaxed) {
+        return;
+    }
+
     let current_thread = nonzero_thread_id();
     // Relaxed is sufficient as we're only interested in the effects on a single
     // atomic variable, and don't need synchronization beyond that.
@@ -46,11 +50,20 @@ pub fn check_active_thread() {
 /// making pgrx calls, particularly in multi-threaded contexts where calls are
 /// protected by locks but you want to verify safety beforehand.
 pub fn would_fail_thread_check() -> bool {
+    if !THREAD_CHECKS_ENABLED.load(Ordering::Relaxed) {
+        return false;
+    }
+
     let current_thread = nonzero_thread_id();
     match ACTIVE_THREAD.load(Ordering::Relaxed) {
         0 => is_os_main_thread() == Some(false),
         thread_id => current_thread.get() != thread_id,
     }
+}
+
+static THREAD_CHECKS_ENABLED: AtomicBool = AtomicBool::new(true);
+pub fn set_thread_checks_enabled(enable: bool) {
+    THREAD_CHECKS_ENABLED.store(enable, Ordering::Relaxed);
 }
 
 /// Use OS-specific mechanisms to detect if we're the process main thread, if
